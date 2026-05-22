@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+
+  bookings      Booking[]
+  damageReports DamageReport[]
+}
+
+model Equipment {
+  id           Int      @id @default(autoincrement())
+  name         String
+  category     String
+  brand        String
+  model        String
+  serialNumber String?
+  status       String   @default("available")
+  quantity     Int      @default(1)
+  photo        String?
+  notes        String?
+  value        Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookingItems      BookingItem[]
+  damageReports     DamageReport[]
+  relationsAsParent EquipmentRelation[] @relation("ParentEquipment")
+  relationsAsChild  EquipmentRelation[] @relation("ChildEquipment")
+  projectTypeKits   ProjectTypeKit[]
+}
+
+model EquipmentRelation {
+  id            Int     @id @default(autoincrement())
+  parentId      Int
+  childId       Int
+  relationType  String  @default("standard")
+  notes         String?
+  bookFrequency Int     @default(0)
+
+  parent Equipment @relation("ParentEquipment", fields: [parentId], references: [id], onDelete: Cascade)
+  child  Equipment @relation("ChildEquipment", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  startDate   DateTime
+  endDate     DateTime
+  projectName String
+  projectType String   @default("other")
+  notes       String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User          @relation(fields: [userId], references: [id])
+  items BookingItem[]
+}
+
+model BookingItem {
+  id          Int @id @default(autoincrement())
+  bookingId   Int
+  equipmentId Int
+
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@unique([bookingId, equipmentId])
+}
+
+model DamageReport {
+  id           Int      @id @default(autoincrement())
+  equipmentId  Int
+  reportedById Int
+  date         DateTime @default(now())
+  severity     String
+  description  String
+  photo        String?
+  resolved     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  equipment  Equipment @relation(fields: [equipmentId], references: [id])
+  reportedBy User      @relation(fields: [reportedById], references: [id])
+}
+
+model ProjectTypeKit {
+  id          Int    @id @default(autoincrement())
+  projectType String
+  equipmentId Int
+  priority    String @default("nice-to-have")
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([projectType, equipmentId])
+}
