@@ -43,6 +43,17 @@ export async function POST(req: NextRequest) {
       }).catch(() => {}); // Ignore if relation doesn't exist
     }
 
+    // Mark booked equipment as "booked" (only if currently available)
+    if (equipmentIds?.length) {
+      await prisma.equipment.updateMany({
+        where: {
+          id: { in: equipmentIds as number[] },
+          status: "available",
+        },
+        data: { status: "booked" },
+      });
+    }
+
     return NextResponse.json(booking, { status: 201 });
   } catch (err) {
     console.error(err);
