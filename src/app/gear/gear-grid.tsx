@@ -37,16 +37,19 @@ const STATUS_VARIANTS: Record<string, "available" | "booked" | "damaged" | "reti
 export function GearGrid({ equipment }: { equipment: GearItem[] }) {
   const [search, setSearch]             = useState("");
   const [category, setCategory]         = useState<Category | "all">("all");
-  const [unavailableIds, setUnavailable] = useState<number[]>([]);
+  const [unavailableIds, setUnavailable]   = useState<number[]>([]);
+  const [availabilityErr, setAvailErr]     = useState(false);
   const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName } = useBookingDraft();
 
   // When dates are set, check which gear is already booked on those dates
   useEffect(() => {
-    if (!hasDateDraft || equipment.length === 0) { setUnavailable([]); return; }
+    if (!hasDateDraft || equipment.length === 0) { setUnavailable([]); setAvailErr(false); return; }
     const ids = equipment.map((e) => e.id).join(",");
+    setAvailErr(false);
     fetch(`/api/bookings/availability?startDate=${startDate}&endDate=${endDate}&equipmentIds=${ids}`)
       .then((r) => r.json())
-      .then((data) => setUnavailable(data.unavailableIds ?? []));
+      .then((data) => setUnavailable(data.unavailableIds ?? []))
+      .catch(() => { setAvailErr(true); setUnavailable([]); });
   }, [hasDateDraft, startDate, endDate, equipment]);
 
   const filtered = equipment.filter((e) => {
@@ -78,6 +81,13 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
           </Link>
         </Button>
       </div>
+
+      {/* Availability error banner */}
+      {availabilityErr && hasDateDraft && (
+        <div className="mb-4 px-4 py-2.5 bg-[#FF4800]/6 border border-[#FF4800]/20 rounded-sm text-[12px] text-[#FF4800]">
+          Could not check availability — reload before booking to avoid conflicts.
+        </div>
+      )}
 
       {/* Draft banner */}
       {hasDraft && (

@@ -7,6 +7,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const reportId = parseInt(id);
+  if (isNaN(reportId)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const report = await prisma.damageReport.update({
     where: { id: reportId },

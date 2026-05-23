@@ -7,6 +7,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const equipmentId = parseInt(id);
+  if (isNaN(equipmentId)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const body = await req.json();
 
   const allowed = ["youtubeVideoId", "youtubeTitle", "youtubeChannel"] as const;
