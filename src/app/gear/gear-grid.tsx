@@ -39,18 +39,22 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
   const [category, setCategory]         = useState<Category | "all">("all");
   const [unavailableIds, setUnavailable]   = useState<number[]>([]);
   const [availabilityErr, setAvailErr]     = useState(false);
+  const [isCheckingAvail, setIsCheckingAvail] = useState(false);
   const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName } = useBookingDraft();
+
+  const equipmentIds = equipment.map((e) => e.id).join(",");
 
   // When dates are set, check which gear is already booked on those dates
   useEffect(() => {
-    if (!hasDateDraft || equipment.length === 0) { setUnavailable([]); setAvailErr(false); return; }
-    const ids = equipment.map((e) => e.id).join(",");
+    if (!hasDateDraft || !equipmentIds) { setUnavailable([]); setAvailErr(false); return; }
+    setIsCheckingAvail(true);
     setAvailErr(false);
-    fetch(`/api/bookings/availability?startDate=${startDate}&endDate=${endDate}&equipmentIds=${ids}`)
+    fetch(`/api/bookings/availability?startDate=${startDate}&endDate=${endDate}&equipmentIds=${equipmentIds}`)
       .then((r) => r.json())
       .then((data) => setUnavailable(data.unavailableIds ?? []))
-      .catch(() => { setAvailErr(true); setUnavailable([]); });
-  }, [hasDateDraft, startDate, endDate, equipment]);
+      .catch(() => { setAvailErr(true); setUnavailable([]); })
+      .finally(() => setIsCheckingAvail(false));
+  }, [hasDateDraft, startDate, endDate, equipmentIds]);
 
   const filtered = equipment.filter((e) => {
     const matchCat  = category === "all" || e.category === category;
@@ -81,6 +85,13 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
           </Link>
         </Button>
       </div>
+
+      {/* Availability loading banner */}
+      {isCheckingAvail && hasDateDraft && (
+        <div className="mb-4 px-4 py-2 border border-[#141414]/10 rounded-sm text-[12px] text-[#8A8A8A] bg-white/20">
+          Checking availability…
+        </div>
+      )}
 
       {/* Availability error banner */}
       {availabilityErr && hasDateDraft && (
