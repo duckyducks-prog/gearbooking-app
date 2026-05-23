@@ -13,7 +13,12 @@ export async function PATCH(
   const allowed = ["youtubeVideoId", "youtubeTitle", "youtubeChannel"] as const;
   const data: Partial<Record<typeof allowed[number], string | null>> = {};
   for (const key of allowed) {
-    if (key in body) data[key] = body[key];
+    if (key in body) {
+      const val = body[key];
+      // Only accept string or null — reject numbers, booleans, objects
+      if (typeof val !== "string" && val !== null) continue;
+      data[key] = val;
+    }
   }
 
   if (Object.keys(data).length === 0) {
