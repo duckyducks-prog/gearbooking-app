@@ -9,6 +9,7 @@ import { Camera, ArrowLeft, Calendar, Link2, AlertTriangle } from "lucide-react"
 import { VideoWalkthrough } from "./video-walkthrough";
 import { ReportDamageDialog } from "./report-damage-dialog";
 import { BookGearButton } from "./book-gear-button";
+import { DamageResolveButton } from "./damage-resolve-button";
 
 export const dynamic = "force-dynamic";
 
@@ -187,9 +188,10 @@ export default async function GearDetailPage({ params }: { params: Promise<{ id:
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <Badge variant={r.severity as "minor" | "major" | "unusable"}>{r.severity}</Badge>
-                        {r.resolved && (
-                          <span className="font-mono text-[9px] text-[#B9CDBE] tracking-wide">resolved</span>
-                        )}
+                        {r.resolved
+                          ? <span className="font-mono text-[9px] text-[#B9CDBE] tracking-wide">resolved</span>
+                          : <DamageResolveButton reportId={r.id} />
+                        }
                       </div>
                     </div>
                   </Card>
