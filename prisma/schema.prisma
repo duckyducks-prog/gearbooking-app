@@ -65,6 +65,7 @@ model Booking {
   projectType String   @default("other")
   notes       String?
   status      String   @default("active")
+  shareToken  String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

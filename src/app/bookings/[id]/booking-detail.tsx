@@ -7,6 +7,7 @@ import { ArrowLeft, Search, X, Camera } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "./share-button";
 
 type Equipment = {
   id: number;
@@ -25,6 +26,8 @@ type BookingItem = {
 type Booking = {
   id: number;
   projectName: string;
+  startDate: string;
+  endDate: string;
   status: string;
   user: { name: string };
   items: BookingItem[];
@@ -102,9 +105,12 @@ export function BookingDetail({
             {booking.projectName}
           </h1>
         </div>
-        <Badge variant={STATUS_VARIANTS[booking.status] ?? "default"} className="mt-2 shrink-0">
-          {booking.status}
-        </Badge>
+        <div className="flex items-center gap-2 mt-2 shrink-0">
+          <Badge variant={STATUS_VARIANTS[booking.status] ?? "default"}>
+            {booking.status}
+          </Badge>
+          <ShareButton booking={booking} />
+        </div>
       </div>
 
       {/* Gear section */}
