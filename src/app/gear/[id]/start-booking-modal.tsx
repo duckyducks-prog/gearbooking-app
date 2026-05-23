@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function StartBookingModal({ equipmentId, open, onClose }: Props) {
-  const { setDates, addItem } = useBookingDraft();
+  const { startBooking } = useBookingDraft();
   const [project, setProject] = useState("");
   const [start,   setStart]   = useState("");
   const [end,     setEnd]     = useState("");
@@ -20,8 +20,8 @@ export function StartBookingModal({ equipmentId, open, onClose }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!project.trim() || !start || !end) return;
-    setDates(project.trim(), start, end);
-    addItem(equipmentId);
+    // Single atomic call — avoids stale closure when setDates + addItem run sequentially
+    startBooking(project.trim(), start, end, equipmentId);
     onClose();
   }
 

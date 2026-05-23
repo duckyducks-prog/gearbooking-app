@@ -23,9 +23,16 @@ export async function PATCH(
       where: { id: report.equipmentId },
     });
     if (equipment?.status === "damaged") {
+      // Check if the equipment is in an active booking — restore to "booked" not "available"
+      const activeBooking = await prisma.bookingItem.count({
+        where: {
+          equipmentId: report.equipmentId,
+          booking: { status: "active" },
+        },
+      });
       await prisma.equipment.update({
         where: { id: report.equipmentId },
-        data: { status: "available" },
+        data: { status: activeBooking > 0 ? "booked" : "available" },
       });
     }
   }

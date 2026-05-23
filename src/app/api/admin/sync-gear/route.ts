@@ -93,18 +93,36 @@ export async function POST() {
       existing = await prisma.equipment.findFirst({ where: { name, brand, model } });
     }
 
-    const data = {
-      name, brand, model, category, status,
-      serialNumber: serialNumber || null,
-      notes: notesVal,
-      value: isNaN(valueNum as number) ? null : valueNum,
-    };
+    // Validate status against known values; default to "available" for new items
+    const validStatuses = ["available", "booked", "damaged", "retired"];
+    const safeStatus = validStatuses.includes(status) ? status : "available";
 
     if (existing) {
-      await prisma.equipment.update({ where: { id: existing.id }, data });
+      // Never overwrite an operational status — the booking system owns that field
+      const liveStatus = ["booked", "damaged"].includes(existing.status)
+        ? existing.status
+        : safeStatus;
+      await prisma.equipment.update({
+        where: { id: existing.id },
+        data: {
+          name, brand, model, category,
+          status: liveStatus,
+          serialNumber: serialNumber || null,
+          notes: notesVal,
+          value: isNaN(valueNum as number) ? null : valueNum,
+        },
+      });
       updated++;
     } else {
-      await prisma.equipment.create({ data });
+      await prisma.equipment.create({
+        data: {
+          name, brand, model, category,
+          status: safeStatus,
+          serialNumber: serialNumber || null,
+          notes: notesVal,
+          value: isNaN(valueNum as number) ? null : valueNum,
+        },
+      });
       created++;
     }
   }

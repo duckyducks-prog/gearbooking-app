@@ -10,13 +10,15 @@ type BookingDraftCtx = {
   hasDateDraft: boolean;
   addItem:      (id: number) => void;
   setDates:     (projectName: string, start: string, end: string) => void;
+  // Atomic: sets dates + adds first item in one persist call, avoiding stale closure
+  startBooking: (projectName: string, start: string, end: string, equipmentId: number) => void;
   clearDraft:   () => void;
 };
 
 const Ctx = createContext<BookingDraftCtx>({
   draftIds: [], projectName: "", startDate: "", endDate: "",
   hasDraft: false, hasDateDraft: false,
-  addItem: () => {}, setDates: () => {}, clearDraft: () => {},
+  addItem: () => {}, setDates: () => {}, startBooking: () => {}, clearDraft: () => {},
 });
 
 const KEY = "studio-booking-draft";
@@ -65,6 +67,19 @@ export function BookingDraftProvider({ children }: { children: React.ReactNode }
     persist(draftIds, name, start, end);
   }
 
+  // Atomic version used by the modal: sets dates AND adds the first item
+  // in a single setDraftIds callback so persist sees the correct values.
+  function startBooking(name: string, start: string, end: string, equipmentId: number) {
+    setProjectName(name);
+    setStartDate(start);
+    setEndDate(end);
+    setDraftIds((prev) => {
+      const next = prev.includes(equipmentId) ? prev : [...prev, equipmentId];
+      persist(next, name, start, end);
+      return next;
+    });
+  }
+
   function clearDraft() {
     setDraftIds([]);
     setProjectName("");
@@ -78,7 +93,7 @@ export function BookingDraftProvider({ children }: { children: React.ReactNode }
       draftIds, projectName, startDate, endDate,
       hasDraft:     draftIds.length > 0,
       hasDateDraft: !!(startDate && endDate),
-      addItem, setDates, clearDraft,
+      addItem, setDates, startBooking, clearDraft,
     }}>
       {children}
     </Ctx.Provider>
