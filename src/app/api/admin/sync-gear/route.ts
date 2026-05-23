@@ -10,7 +10,13 @@ function parseCsvLine(line: string): string[] {
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
     if (ch === '"') {
-      inQuotes = !inQuotes;
+      if (inQuotes && line[i + 1] === '"') {
+        // Escaped quote inside quoted field — output a single "
+        current += '"';
+        i++; // skip the second quote
+      } else {
+        inQuotes = !inQuotes;
+      }
     } else if (ch === "," && !inQuotes) {
       result.push(current.trim());
       current = "";
