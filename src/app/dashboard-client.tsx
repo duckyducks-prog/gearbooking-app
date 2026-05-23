@@ -1,11 +1,12 @@
 "use client";
+import { useState } from "react";
 import { useUser } from "@/lib/user-context";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Camera, CalendarDays } from "lucide-react";
+import { Camera, CalendarDays, RefreshCw } from "lucide-react";
 
 type Booking = {
   id: number;
@@ -21,6 +22,22 @@ type Booking = {
 
 export function DashboardClient({ bookings }: { bookings: Booking[] }) {
   const { user } = useUser();
+  const [syncing, setSyncing]   = useState(false);
+  const [syncMsg, setSyncMsg]   = useState<string | null>(null);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res  = await fetch("/api/admin/sync-gear", { method: "POST" });
+      const data = await res.json();
+      setSyncMsg(res.ok ? data.message : (data.error ?? "Sync failed"));
+    } catch {
+      setSyncMsg("Network error — sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   const myBookings = bookings.filter((b) => b.userId === user.id);
   const myGear = myBookings.flatMap((b) =>
@@ -100,6 +117,32 @@ export function DashboardClient({ bookings }: { bookings: Booking[] }) {
           </div>
         )}
       </section>
+
+      {/* Admin: sync gear from Google Sheets */}
+      {user.role === "admin" && (
+        <section className="lg:col-span-2">
+          <div className="flex items-center gap-4 px-4 py-3 border border-[#141414]/10 rounded-sm bg-white/20">
+            <div className="flex-1 min-w-0">
+              <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#8A8A8A]">
+                Gear inventory
+              </p>
+              <p className="text-[13px] text-[#3D3D3D] mt-0.5">
+                {syncMsg ?? "Sync the gear list from Google Sheets — your team's source of truth."}
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSync}
+              disabled={syncing}
+              className="shrink-0"
+            >
+              <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
+              {syncing ? "Syncing…" : "Sync from Sheet"}
+            </Button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
