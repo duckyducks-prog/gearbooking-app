@@ -131,10 +131,14 @@ export default async function GearDetailPage({ params }: { params: Promise<{ id:
 
           {/* YouTube walkthrough */}
           <VideoWalkthrough
+            equipmentId={equipment.id}
             name={equipment.name}
             brand={equipment.brand}
             model={equipment.model}
             category={equipment.category}
+            cachedVideoId={equipment.youtubeVideoId ?? null}
+            cachedTitle={equipment.youtubeTitle ?? null}
+            cachedChannel={equipment.youtubeChannel ?? null}
           />
 
           {/* Booking history */}

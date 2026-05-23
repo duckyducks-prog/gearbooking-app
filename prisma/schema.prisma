@@ -27,8 +27,11 @@ model Equipment {
   status       String   @default("available")
   quantity     Int      @default(1)
   photo        String?
-  notes        String?
-  value        Float?
+  notes           String?
+  value           Float?
+  youtubeVideoId  String?
+  youtubeTitle    String?
+  youtubeChannel  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
