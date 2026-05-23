@@ -39,7 +39,17 @@ export function DashboardClient({ bookings }: { bookings: Booking[] }) {
     }
   }
 
-  const myBookings = bookings.filter((b) => b.userId === user.id);
+  const now = new Date();
+  const myBookings = bookings
+    .filter((b) => b.userId === user.id)
+    .sort((a, b) => {
+      // Overdue bookings (past endDate) float to the top
+      const aOverdue = new Date(a.endDate) < now;
+      const bOverdue = new Date(b.endDate) < now;
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
   const myGear = myBookings.flatMap((b) =>
     b.items.map((i) => ({ ...i.equipment, bookingId: b.id, projectName: b.projectName }))
   );
@@ -61,8 +71,10 @@ export function DashboardClient({ bookings }: { bookings: Booking[] }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {myBookings.map((b) => (
-              <Card key={b.id} className="p-4">
+            {myBookings.map((b) => {
+              const overdue = new Date(b.endDate) < now;
+              return (
+              <Card key={b.id} className={`p-4 ${overdue ? "border-[#FF4800]/30 bg-[#FF4800]/3" : ""}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-medium text-[14px] text-[#141414]">{b.projectName}</div>
@@ -75,10 +87,18 @@ export function DashboardClient({ bookings }: { bookings: Booking[] }) {
                       <span className="font-mono text-[11px] tracking-wide">{b.projectType}</span>
                     </p>
                   </div>
-                  <Badge variant="booked">{b.status}</Badge>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {overdue && (
+                      <span className="px-1.5 py-0.5 bg-[#FF4800]/10 text-[#FF4800] border border-[#FF4800]/20 rounded-sm text-[9px] font-mono tracking-widest uppercase">
+                        Overdue
+                      </span>
+                    )}
+                    <Badge variant="booked">{b.status}</Badge>
+                  </div>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
