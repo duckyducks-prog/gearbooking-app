@@ -20,6 +20,7 @@ type Equipment = {
 
 type BookingItem = {
   id: number;
+  quantity: number;
   equipment: Equipment;
 };
 
@@ -146,6 +147,9 @@ export function BookingDetail({
                   <p className="text-[13px] font-medium text-[#141414] truncate">{item.equipment.name}</p>
                   <p className="font-mono text-[9px] tracking-widest uppercase text-[#8A8A8A]">
                     {item.equipment.brand} · {item.equipment.category}
+                    {item.quantity > 1 && (
+                      <span className="text-[#3D3D3D]"> · ×{item.quantity}</span>
+                    )}
                   </p>
                 </div>
                 <button

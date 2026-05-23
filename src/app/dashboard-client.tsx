@@ -74,29 +74,31 @@ export function DashboardClient({ bookings }: { bookings: Booking[] }) {
             {myBookings.map((b) => {
               const overdue = new Date(b.endDate) < now;
               return (
-              <Card key={b.id} className={`p-4 ${overdue ? "border-[#FF4800]/30 bg-[#FF4800]/3" : ""}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-medium text-[14px] text-[#141414]">{b.projectName}</div>
-                    <p className="font-mono text-[11px] text-[#8A8A8A] mt-0.5 tracking-wide">
-                      {format(new Date(b.startDate), "MMM d")} → {format(new Date(b.endDate), "MMM d")}
-                    </p>
-                    <p className="text-[12px] text-[#8A8A8A] mt-1">
-                      {b.items.length} item{b.items.length !== 1 ? "s" : ""}
-                      {" · "}
-                      <span className="font-mono text-[11px] tracking-wide">{b.projectType}</span>
-                    </p>
+              <Link href={`/bookings/${b.id}`} className="block group/bcard">
+                <Card key={b.id} className={`p-4 group-hover/bcard:border-[#141414]/25 group-hover/bcard:bg-white/70 transition-all ${overdue ? "border-[#FF4800]/30 bg-[#FF4800]/3" : ""}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-medium text-[14px] text-[#141414] group-hover/bcard:text-[#FF4800] transition-colors">{b.projectName}</div>
+                      <p className="font-mono text-[11px] text-[#8A8A8A] mt-0.5 tracking-wide">
+                        {format(new Date(b.startDate), "MMM d")} → {format(new Date(b.endDate), "MMM d")}
+                      </p>
+                      <p className="text-[12px] text-[#8A8A8A] mt-1">
+                        {b.items.length} item{b.items.length !== 1 ? "s" : ""}
+                        {" · "}
+                        <span className="font-mono text-[11px] tracking-wide">{b.projectType}</span>
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {overdue && (
+                        <span className="px-1.5 py-0.5 bg-[#FF4800]/10 text-[#FF4800] border border-[#FF4800]/20 rounded-sm text-[9px] font-mono tracking-widest uppercase">
+                          Overdue
+                        </span>
+                      )}
+                      <Badge variant="booked">{b.status}</Badge>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {overdue && (
-                      <span className="px-1.5 py-0.5 bg-[#FF4800]/10 text-[#FF4800] border border-[#FF4800]/20 rounded-sm text-[9px] font-mono tracking-widest uppercase">
-                        Overdue
-                      </span>
-                    )}
-                    <Badge variant="booked">{b.status}</Badge>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </Link>
               );
             })}
           </div>
