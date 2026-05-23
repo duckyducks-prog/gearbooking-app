@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
@@ -34,9 +35,19 @@ const STATUS_VARIANTS: Record<string, "available" | "booked" | "damaged" | "reti
 };
 
 export function GearGrid({ equipment }: { equipment: GearItem[] }) {
-  const [search, setSearch]       = useState("");
-  const [category, setCategory]   = useState<Category | "all">("all");
-  const { hasDraft, draftIds }    = useBookingDraft();
+  const [search, setSearch]             = useState("");
+  const [category, setCategory]         = useState<Category | "all">("all");
+  const [unavailableIds, setUnavailable] = useState<number[]>([]);
+  const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName } = useBookingDraft();
+
+  // When dates are set, check which gear is already booked on those dates
+  useEffect(() => {
+    if (!hasDateDraft || equipment.length === 0) { setUnavailable([]); return; }
+    const ids = equipment.map((e) => e.id).join(",");
+    fetch(`/api/bookings/availability?startDate=${startDate}&endDate=${endDate}&equipmentIds=${ids}`)
+      .then((r) => r.json())
+      .then((data) => setUnavailable(data.unavailableIds ?? []));
+  }, [hasDateDraft, startDate, endDate, equipment]);
 
   const filtered = equipment.filter((e) => {
     const matchCat  = category === "all" || e.category === category;
@@ -72,11 +83,16 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
       {hasDraft && (
         <div className="mb-6 flex items-center justify-between px-4 py-2.5 bg-[#FF4800]/6 border border-[#FF4800]/20 rounded-sm">
           <p className="text-[12px] text-[#FF4800]">
-            <span className="font-medium">{draftIds.length} item{draftIds.length !== 1 ? "s" : ""}</span>
-            <span className="text-[#FF4800]/70"> in your current booking — tap any item to add more.</span>
+            {projectName && <span className="font-medium">{projectName} · </span>}
+            {hasDateDraft && (
+              <span className="text-[#FF4800]/70">
+                {format(new Date(startDate), "MMM d")} → {format(new Date(endDate), "MMM d")} · {" "}
+              </span>
+            )}
+            <span className="font-medium">{draftIds.length} item{draftIds.length !== 1 ? "s" : ""} selected</span>
           </p>
           <Link href="/bookings/new" className="font-mono text-[10px] tracking-widest uppercase text-[#FF4800] hover:underline shrink-0">
-            Review →
+            Confirm booking →
           </Link>
         </div>
       )}
@@ -124,9 +140,11 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
 
       {/* Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-        {filtered.map((item) => (
-          <Link key={item.id} href={`/gear/${item.id}`}>
-            <Card className="overflow-hidden group cursor-pointer h-full flex flex-col">
+        {filtered.map((item) => {
+          const isTaken = hasDateDraft && unavailableIds.includes(item.id);
+          return (
+          <Link key={item.id} href={`/gear/${item.id}`} className={isTaken ? "pointer-events-none" : ""}>
+            <Card className={cn("overflow-hidden group cursor-pointer h-full flex flex-col", isTaken && "opacity-50")}>
               {/* Photo */}
               <div className="aspect-[4/3] bg-[#F8F5EE] border-b border-[#141414]/8 flex items-center justify-center relative overflow-hidden">
                 {item.photo ? (
@@ -139,6 +157,13 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
                   />
                 ) : (
                   <Camera size={28} className="text-[#8A8A8A]/40" />
+                )}
+                {isTaken && (
+                  <div className="absolute inset-0 bg-[#141414]/60 flex items-end justify-start p-2">
+                    <span className="px-2 py-0.5 bg-[#141414]/90 text-[#F8F5EE] rounded-sm text-[9px] font-mono tracking-widest uppercase">
+                      Taken
+                    </span>
+                  </div>
                 )}
                 <div className="absolute top-2 right-2">
                   <Badge variant={STATUS_VARIANTS[item.status] ?? "default"}>
@@ -175,7 +200,8 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
               </div>
             </Card>
           </Link>
-        ))}
+          );
+        })}
 
         {filtered.length === 0 && (
           <div className="col-span-full py-16 text-center text-[#8A8A8A] text-sm">
