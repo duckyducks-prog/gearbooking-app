@@ -7,6 +7,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const bookingId = parseInt(id);
+  if (isNaN(bookingId)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   const { status } = await req.json();
 
   if (!["returned", "cancelled"].includes(status)) {

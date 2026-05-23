@@ -42,7 +42,7 @@ export async function POST() {
   }
 
   const csv = await res.text();
-  const lines = csv.split("\n").filter((l) => l.trim());
+  const lines = csv.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) {
     return NextResponse.json({ error: "Sheet appears to be empty" }, { status: 400 });
   }
