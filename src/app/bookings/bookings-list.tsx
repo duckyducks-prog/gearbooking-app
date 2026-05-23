@@ -86,49 +86,52 @@ export function BookingsList({ bookings, users }: { bookings: Booking[]; users: 
       {/* List */}
       <div className="space-y-2">
         {filtered.map((b) => (
-          <Card key={b.id} className="p-4">
-            <div className="flex items-start gap-4">
-              {/* Date column */}
-              <div className="shrink-0 w-16 text-center border-r border-[#141414]/8 pr-4">
-                <div className="font-mono text-[11px] text-[#8A8A8A] uppercase tracking-wide">
-                  {format(new Date(b.startDate), "MMM")}
+          <Link key={b.id} href={`/bookings/${b.id}`} className="block group/booking">
+            <Card className="p-4 group-hover/booking:border-[#141414]/25 group-hover/booking:bg-white/70 transition-all">
+              <div className="flex items-start gap-4">
+                {/* Date column */}
+                <div className="shrink-0 w-16 text-center border-r border-[#141414]/8 pr-4">
+                  <div className="font-mono text-[11px] text-[#8A8A8A] uppercase tracking-wide">
+                    {format(new Date(b.startDate), "MMM")}
+                  </div>
+                  <div className="text-[24px] font-light text-[#141414] leading-none">
+                    {format(new Date(b.startDate), "d")}
+                  </div>
                 </div>
-                <div className="text-[24px] font-light text-[#141414] leading-none">
-                  {format(new Date(b.startDate), "d")}
-                </div>
-              </div>
 
-              {/* Main content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-3 mb-1">
-                  <div>
-                    <div className="font-medium text-[15px] text-[#141414]">{b.projectName}</div>
-                    <div className="font-mono text-[11px] text-[#8A8A8A] tracking-wide mt-0.5">
-                      {b.user.name} · {format(new Date(b.startDate), "MMM d")} → {format(new Date(b.endDate), "MMM d, yyyy")}
+                {/* Main content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <div>
+                      <div className="font-medium text-[15px] text-[#141414] group-hover/booking:text-[#FF4800] transition-colors">
+                        {b.projectName}
+                      </div>
+                      <div className="font-mono text-[11px] text-[#8A8A8A] tracking-wide mt-0.5">
+                        {b.user.name} · {format(new Date(b.startDate), "MMM d")} → {format(new Date(b.endDate), "MMM d, yyyy")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge>{b.projectType}</Badge>
+                      <Badge variant={STATUS_VARIANTS[b.status] ?? "default"}>{b.status}</Badge>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge>{b.projectType}</Badge>
-                    <Badge variant={STATUS_VARIANTS[b.status] ?? "default"}>{b.status}</Badge>
-                  </div>
-                </div>
 
-                {b.items.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {b.items.map((item) => (
-                      <Link
-                        key={item.equipment.id}
-                        href={`/gear/${item.equipment.id}`}
-                        className="px-2 py-0.5 bg-white/60 border border-[#141414]/8 rounded-sm text-[11px] text-[#3D3D3D] hover:border-[#FF4800]/30 hover:text-[#FF4800] transition-colors"
-                      >
-                        {item.equipment.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                  {b.items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {b.items.map((item) => (
+                        <span
+                          key={item.equipment.id}
+                          className="px-2 py-0.5 bg-white/60 border border-[#141414]/8 rounded-sm text-[11px] text-[#3D3D3D]"
+                        >
+                          {item.equipment.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         ))}
 
         {filtered.length === 0 && (

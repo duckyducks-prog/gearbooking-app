@@ -40,7 +40,8 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
   const [unavailableIds, setUnavailable]   = useState<number[]>([]);
   const [availabilityErr, setAvailErr]     = useState(false);
   const [isCheckingAvail, setIsCheckingAvail] = useState(false);
-  const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName } = useBookingDraft();
+  const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName, addItem } = useBookingDraft();
+  const [justAdded, setJustAdded] = useState<number | null>(null);
 
   const equipmentIds = equipment.map((e) => e.id).join(",");
 
@@ -218,6 +219,28 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
                     </p>
                   )}
                 </div>
+
+                {/* Add to Booking button — shown whenever a booking is in progress */}
+                {hasDraft && !isTaken && item.status !== "damaged" && item.status !== "retired" && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (draftIds.includes(item.id)) return;
+                      addItem(item.id);
+                      setJustAdded(item.id);
+                      setTimeout(() => setJustAdded(null), 1500);
+                    }}
+                    className={cn(
+                      "mt-2 w-full py-1.5 rounded-sm text-[11px] font-mono tracking-wide transition-all border",
+                      draftIds.includes(item.id) || justAdded === item.id
+                        ? "bg-[#B9CDBE]/30 text-[#042729] border-[#B9CDBE]/50"
+                        : "bg-[#FF4800]/6 text-[#FF4800] border-[#FF4800]/20 hover:bg-[#FF4800]/14 hover:border-[#FF4800]/40"
+                    )}
+                  >
+                    {draftIds.includes(item.id) ? "✓ In booking" : justAdded === item.id ? "✓ Added" : "+ Add to booking"}
+                  </button>
+                )}
               </div>
             </Card>
           </Link>
