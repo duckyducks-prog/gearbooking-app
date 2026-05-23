@@ -41,7 +41,7 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
   const [unavailableIds, setUnavailable]   = useState<number[]>([]);
   const [availabilityErr, setAvailErr]     = useState(false);
   const [isCheckingAvail, setIsCheckingAvail] = useState(false);
-  const { hasDraft, draftIds, hasDateDraft, startDate, endDate, projectName, addItem } = useBookingDraft();
+  const { hasDraft, draftIds, draftQuantities, hasDateDraft, startDate, endDate, projectName, addItem, setQuantity } = useBookingDraft();
   const [justAdded,   setJustAdded]   = useState<number | null>(null);
   const [modalItemId, setModalItemId] = useState<number | null>(null);
 
@@ -225,33 +225,56 @@ export function GearGrid({ equipment }: { equipment: GearItem[] }) {
                 {/* Add to Booking — always visible on bookable gear */}
                 {!isTaken && item.status !== "damaged" && item.status !== "retired" && (() => {
                   const inDraft = draftIds.includes(item.id);
-                  const wasJustAdded = justAdded === item.id;
+                  const qty = draftQuantities[item.id] ?? 1;
+
+                  if (inDraft) {
+                    // Quantity stepper
+                    return (
+                      <div
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="mt-2 flex items-center border border-[#B9CDBE]/50 rounded-sm overflow-hidden bg-[#B9CDBE]/20"
+                      >
+                        <button
+                          onClick={() => setQuantity(item.id, qty - 1)}
+                          className="px-2.5 py-1.5 text-[#042729] hover:bg-[#B9CDBE]/40 font-mono text-[13px] leading-none"
+                        >
+                          −
+                        </button>
+                        <span className="flex-1 text-center text-[11px] font-mono text-[#042729] select-none">
+                          {qty} / {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => setQuantity(item.id, qty + 1)}
+                          disabled={qty >= item.quantity}
+                          className="px-2.5 py-1.5 text-[#042729] hover:bg-[#B9CDBE]/40 font-mono text-[13px] leading-none disabled:opacity-30"
+                        >
+                          +
+                        </button>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (inDraft) return;
                         if (hasDraft) {
-                          // Booking already in progress — add directly
                           addItem(item.id);
                           setJustAdded(item.id);
                           setTimeout(() => setJustAdded(null), 1500);
                         } else {
-                          // No booking yet — open modal to set project + dates
                           setModalItemId(item.id);
                         }
                       }}
                       className={cn(
                         "mt-2 w-full py-1.5 rounded-sm text-[11px] font-mono tracking-wide transition-all border flex items-center justify-center gap-1",
-                        inDraft || wasJustAdded
+                        justAdded === item.id
                           ? "bg-[#B9CDBE]/30 text-[#042729] border-[#B9CDBE]/50"
                           : "bg-[#FF4800]/6 text-[#FF4800] border-[#FF4800]/20 hover:bg-[#FF4800]/14 hover:border-[#FF4800]/40"
                       )}
                     >
-                      {inDraft
-                        ? <><Check size={10} /> In booking</>
-                        : wasJustAdded
+                      {justAdded === item.id
                         ? <><Check size={10} /> Added</>
                         : <><Plus size={10} /> Add to booking</>
                       }

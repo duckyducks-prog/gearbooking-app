@@ -24,7 +24,7 @@ export function CreateBookingForm() {
   const router   = useRouter();
   const { user } = useUser();
   const {
-    draftIds,
+    draftIds, draftQuantities,
     projectName: ctxProject,
     startDate:   ctxStart,
     endDate:     ctxEnd,
@@ -84,7 +84,7 @@ export function CreateBookingForm() {
         projectType: "other",
         startDate,
         endDate,
-        equipmentIds: gear.map((g) => g.id),
+        equipmentItems: gear.map((g) => ({ id: g.id, qty: draftQuantities[g.id] ?? 1 })),
       }),
     });
 
@@ -212,6 +212,11 @@ export function CreateBookingForm() {
                     <p className="font-mono text-[9px] tracking-widest uppercase text-[#8A8A8A]">{item.brand}</p>
                     <p className="text-[13px] font-medium text-[#141414] truncate">{item.name}</p>
                   </div>
+                  {(draftQuantities[item.id] ?? 1) > 1 && (
+                    <span className="font-mono text-[11px] text-[#8A8A8A] shrink-0">
+                      ×{draftQuantities[item.id]}
+                    </span>
+                  )}
                   <Badge>{item.category}</Badge>
                 </Card>
               ))}

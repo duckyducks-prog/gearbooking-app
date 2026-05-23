@@ -4,11 +4,17 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, projectName, projectType, startDate, endDate, notes, equipmentIds } = body;
+    const { userId, projectName, projectType, startDate, endDate, notes, equipmentIds, equipmentItems } = body;
+    // equipmentItems: [{ id, qty }] — preferred. equipmentIds: number[] — legacy fallback.
 
     if (!userId || !projectName || !startDate || !endDate) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    // Normalise to [{id, qty}] regardless of which format was sent
+    const items: { id: number; qty: number }[] = equipmentItems?.length
+      ? equipmentItems
+      : (equipmentIds ?? []).map((id: number) => ({ id, qty: 1 }));
 
     const booking = await prisma.booking.create({
       data: {
@@ -19,15 +25,15 @@ export async function POST(req: NextRequest) {
         endDate: new Date(endDate),
         notes: notes || null,
         status: "active",
-        items: equipmentIds?.length
-          ? { create: (equipmentIds as number[]).map((id: number) => ({ equipmentId: id })) }
+        items: items.length
+          ? { create: items.map(({ id, qty }) => ({ equipmentId: id, quantity: qty })) }
           : undefined,
       },
       include: { items: true },
     });
 
     // Increment bookFrequency for every pair booked together
-    const ids: number[] = equipmentIds;
+    const ids: number[] = items.map(({ id }) => id);
     const pairs: [number, number][] = [];
     for (let i = 0; i < ids.length; i++) {
       for (let j = i + 1; j < ids.length; j++) {
